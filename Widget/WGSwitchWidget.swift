@@ -40,7 +40,7 @@ struct WidgetView: View {
                     HStack {
                         Text(name).lineLimit(1)
                         Spacer()
-                        if entry.state.active == name { Image(systemName: "checkmark.circle.fill") }
+                        SwitchGlyph(on: entry.state.active == name)
                     }
                     .padding(.horizontal, 8).padding(.vertical, 4)
                     .background(entry.state.active == name ? Color.green.opacity(0.25) : Color.secondary.opacity(0.15),
@@ -53,6 +53,18 @@ struct WidgetView: View {
             Spacer(minLength: 0)
         }
         .containerBackground(.fill.tertiary, for: .widget)
+    }
+}
+
+/// Static look-alike of a switch: widgets can only open links, the app does the toggling.
+struct SwitchGlyph: View {
+    let on: Bool
+    var body: some View {
+        Capsule().fill(on ? Color.green : Color.secondary.opacity(0.35))
+            .frame(width: 26, height: 15)
+            .overlay(alignment: on ? .trailing : .leading) {
+                Circle().fill(.white).padding(2)
+            }
     }
 }
 
