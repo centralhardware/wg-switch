@@ -1,5 +1,5 @@
 WGSwitch.xcodeproj/
 build/
 App/Info.plist
-Widget/Info.plist
+Controls/Info.plist
 *.entitlements

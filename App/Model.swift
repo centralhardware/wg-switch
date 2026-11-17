@@ -12,6 +12,7 @@ final class Model: ObservableObject {
 
     init() {
         refresh()
+        listenForControls()
         // Pick up tunnels started/stopped from the terminal too.
         timer = Timer.scheduledTimer(withTimeInterval: 10, repeats: true) { [weak self] _ in
             Task { @MainActor in self?.refresh() }
@@ -43,6 +44,22 @@ final class Model: ObservableObject {
         }
     }
 
+    /// Bring `name` up (everything else down) or take it down.
+    func set(_ name: String, on: Bool) {
+        if on != (active == name) { toggle(name) } else { refresh() }
+    }
+
+    private func listenForControls() {
+        let observer = Unmanaged.passUnretained(self).toOpaque()
+        CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), observer, { _, observer, _, _, _ in
+            guard let observer else { return }
+            let model = Unmanaged<Model>.fromOpaque(observer).takeUnretainedValue()
+            Task { @MainActor in
+                if let req = SwitchRequest.take() { model.set(req.profile, on: req.on) }
+            }
+        }, SwitchRequest.notification, nil, .deliverImmediately)
+    }
+
     func handle(_ url: URL) {
         guard url.scheme == "wgswitch" else { return }
         if url.host == "toggle", let name = url.pathComponents.dropFirst().first {
@@ -54,6 +71,6 @@ final class Model: ObservableObject {
 
     private func publish() {
         SharedState(profiles: profiles, active: active, error: error).save()
-        WidgetCenter.shared.reloadAllTimelines()
+        ControlCenter.shared.reloadAllControls()
     }
 }

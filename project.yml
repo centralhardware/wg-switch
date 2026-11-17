@@ -2,7 +2,7 @@ name: WGSwitch
 options:
   bundleIdPrefix: me.centralhardware
   deploymentTarget:
-    macOS: "14.0"
+    macOS: "26.0"
 settings:
   base:
     SWIFT_VERSION: "5.9"
@@ -15,7 +15,7 @@ targets:
     platform: macOS
     sources: [App, Shared]
     dependencies:
-      - target: WGSwitchWidget
+      - target: WGSwitchControls
     info:
       path: App/Info.plist
       properties:
@@ -28,18 +28,18 @@ targets:
       path: App/WGSwitch.entitlements
       properties:
         com.apple.security.application-groups: [$(TeamIdentifierPrefix)me.centralhardware.wgswitch]
-  WGSwitchWidget:
+  WGSwitchControls:
     type: app-extension
     platform: macOS
-    sources: [Widget, Shared]
+    sources: [Controls, Shared]
     info:
-      path: Widget/Info.plist
+      path: Controls/Info.plist
       properties:
         AppGroup: $(TeamIdentifierPrefix)me.centralhardware.wgswitch
         NSExtension:
           NSExtensionPointIdentifier: com.apple.widgetkit-extension
     entitlements:
-      path: Widget/WGSwitchWidget.entitlements
+      path: Controls/WGSwitchControls.entitlements
       properties:
         com.apple.security.app-sandbox: true
         com.apple.security.application-groups: [$(TeamIdentifierPrefix)me.centralhardware.wgswitch]
