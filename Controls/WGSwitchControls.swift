@@ -11,9 +11,16 @@ struct ProfileEntity: AppEntity {
     var displayRepresentation: DisplayRepresentation { DisplayRepresentation(title: "\(id)") }
 }
 
-struct ProfileQuery: EntityQuery {
+/// Suggests the profiles the app published; typing a name also works (e.g. before the app has run).
+struct ProfileQuery: EntityStringQuery {
     func entities(for identifiers: [String]) async throws -> [ProfileEntity] { identifiers.map(ProfileEntity.init) }
     func suggestedEntities() async throws -> [ProfileEntity] { SharedState.load().profiles.map(ProfileEntity.init) }
+    func entities(matching string: String) async throws -> [ProfileEntity] {
+        let name = string.trimmingCharacters(in: .whitespaces)
+        let known = SharedState.load().profiles.filter { $0.localizedCaseInsensitiveContains(name) }
+        let typed = name.isEmpty || known.contains(name) ? [] : [name]
+        return (known + typed).map(ProfileEntity.init)
+    }
 }
 
 struct SelectProfile: ControlConfigurationIntent {
