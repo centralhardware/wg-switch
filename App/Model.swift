@@ -18,7 +18,16 @@ final class Model: ObservableObject {
         }
         // Pick up tunnels started/stopped from the terminal too.
         timer = Timer.scheduledTimer(withTimeInterval: 10, repeats: true) { [weak self] _ in
-            Task { @MainActor in self?.refresh() }
+            Task { @MainActor in self?.tick() }
+        }
+    }
+
+    /// Periodic check; also picks up a tile request whose Darwin notification was missed.
+    private func tick() {
+        if let req = SwitchRequest.take() {
+            set(req.profile, on: req.on)
+        } else {
+            refresh()
         }
     }
 
@@ -62,6 +71,7 @@ final class Model: ObservableObject {
 
     /// Bring `name` up (everything else down) or take it down.
     func set(_ name: String, on: Bool) {
+        guard profiles.contains(name) else { refresh(); return }   // e.g. an unconfigured tile
         if on != (active == name) { toggle(name) } else { refresh() }
     }
 
