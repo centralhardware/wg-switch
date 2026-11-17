@@ -1,0 +1,45 @@
+name: WGSwitch
+options:
+  bundleIdPrefix: me.centralhardware
+  deploymentTarget:
+    macOS: "14.0"
+settings:
+  base:
+    SWIFT_VERSION: "5.9"
+    MARKETING_VERSION: "1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    DEVELOPMENT_TEAM: ""   # set your team in Xcode (needed for the app group / widget)
+targets:
+  WGSwitch:
+    type: application
+    platform: macOS
+    sources: [App, Shared]
+    dependencies:
+      - target: WGSwitchWidget
+    info:
+      path: App/Info.plist
+      properties:
+        LSUIElement: true
+        AppGroup: $(TeamIdentifierPrefix)me.centralhardware.wgswitch
+        CFBundleURLTypes:
+          - CFBundleURLName: me.centralhardware.wgswitch
+            CFBundleURLSchemes: [wgswitch]
+    entitlements:
+      path: App/WGSwitch.entitlements
+      properties:
+        com.apple.security.application-groups: [$(TeamIdentifierPrefix)me.centralhardware.wgswitch]
+  WGSwitchWidget:
+    type: app-extension
+    platform: macOS
+    sources: [Widget, Shared]
+    info:
+      path: Widget/Info.plist
+      properties:
+        AppGroup: $(TeamIdentifierPrefix)me.centralhardware.wgswitch
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    entitlements:
+      path: Widget/WGSwitchWidget.entitlements
+      properties:
+        com.apple.security.app-sandbox: true
+        com.apple.security.application-groups: [$(TeamIdentifierPrefix)me.centralhardware.wgswitch]
