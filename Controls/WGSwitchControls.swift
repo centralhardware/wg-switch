@@ -43,21 +43,27 @@ struct ToggleProfile: SetValueIntent {
 
 // MARK: - Control
 
+struct TileValue {
+    let name: String
+    let isOn: Bool
+}
+
 struct ProfileValue: AppIntentControlValueProvider {
-    func previewValue(configuration: SelectProfile) -> Bool { false }
-    func currentValue(configuration: SelectProfile) async throws -> Bool {
-        guard let name = configuration.profile?.id else { return false }
-        return SharedState.load().active == name
+    func previewValue(configuration: SelectProfile) -> TileValue {
+        TileValue(name: configuration.profile?.id ?? "WireGuard", isOn: false)
+    }
+    func currentValue(configuration: SelectProfile) async throws -> TileValue {
+        let name = configuration.profile?.id ?? "WireGuard"
+        return TileValue(name: name, isOn: SharedState.load().active == name)
     }
 }
 
 struct WGProfileControl: ControlWidget {
     var body: some ControlWidgetConfiguration {
         AppIntentControlConfiguration(kind: "me.centralhardware.wgswitch.profile",
-                                      provider: ProfileValue()) { config in
-            let name = config.profile?.id ?? "WireGuard"
-            ControlWidgetToggle(name, isOn: false /* replaced by provider value */,
-                                action: ToggleProfile(profile: name)) { isOn in
+                                      provider: ProfileValue()) { value in
+            ControlWidgetToggle(value.name, isOn: value.isOn,
+                                action: ToggleProfile(profile: value.name)) { isOn in
                 Label(isOn ? "On" : "Off", systemImage: isOn ? "lock.shield.fill" : "lock.shield")
             }
         }
