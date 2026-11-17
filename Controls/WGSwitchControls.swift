@@ -28,26 +28,6 @@ struct SelectProfile: ControlConfigurationIntent {
     @Parameter(title: "Profile") var profile: ProfileEntity?
 }
 
-// MARK: - Toggle action
-
-struct ToggleProfile: SetValueIntent {
-    static let title: LocalizedStringResource = "Toggle WireGuard Profile"
-    @Parameter(title: "Profile") var profile: String
-    @Parameter(title: "On") var value: Bool
-
-    init() {}
-    init(profile: String) { self.profile = profile }
-
-    func perform() async throws -> some IntentResult {
-        // Show the new state right away; the app corrects it if wg-quick fails.
-        var state = SharedState.load()
-        state.active = value ? profile : (state.active == profile ? nil : state.active)
-        state.save()
-        SwitchRequest.send(profile: profile, on: value)
-        return .result()
-    }
-}
-
 // MARK: - Control
 
 struct TileValue {

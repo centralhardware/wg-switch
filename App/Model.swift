@@ -13,6 +13,9 @@ final class Model: ObservableObject {
     init() {
         refresh()
         listenForControls()
+        ToggleProfile.handler = { [weak self] name, on in
+            try await self?.apply(name, on: on)
+        }
         // Pick up tunnels started/stopped from the terminal too.
         timer = Timer.scheduledTimer(withTimeInterval: 10, repeats: true) { [weak self] _ in
             Task { @MainActor in self?.refresh() }
@@ -42,6 +45,14 @@ final class Model: ObservableObject {
                 if let failure { self.error = failure; self.publish() }
             }
         }
+    }
+
+    /// Used by the Control Center intent when it runs in the app: waits for wg-quick, throws on failure.
+    func apply(_ name: String, on: Bool) async throws {
+        if on == (active == name) { refresh(); return }
+        busy = true
+        defer { busy = false; refresh() }
+        try await Task.detached { try WireGuard.toggle(name) }.value
     }
 
     func grantAccess() {
