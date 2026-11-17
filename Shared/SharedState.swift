@@ -14,6 +14,7 @@ struct SharedState: Codable {
     static var defaults: UserDefaults? { UserDefaults(suiteName: suite) }
 
     static func load() -> SharedState {
+        defaults?.synchronize()   // another process wrote it; drop any cached copy
         guard let data = defaults?.data(forKey: key),
               let s = try? JSONDecoder().decode(SharedState.self, from: data) else { return SharedState() }
         return s

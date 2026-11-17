@@ -31,7 +31,7 @@ struct MenuContent: View {
     /// One switch per profile; turning one on turns every other one off.
     private func binding(_ name: String) -> Binding<Bool> {
         Binding(get: { model.active == name },
-                set: { on in if on != (model.active == name) { model.toggle(name) } })
+                set: { on in model.set(name, on: on) })
     }
 
     var body: some View {

@@ -58,10 +58,14 @@ final class Model: ObservableObject {
 
     /// Used by the Control Center intent when it runs in the app: waits for wg-quick, throws on failure.
     func apply(_ name: String, on: Bool) async throws {
-        if on == (active == name) { refresh(); return }
         busy = true
         defer { busy = false; refresh() }
-        try await Task.detached { try WireGuard.toggle(name) }.value
+        do {
+            try await Task.detached { try WireGuard.set(name, on: on) }.value
+        } catch {
+            self.error = error.localizedDescription
+            throw error
+        }
     }
 
     func grantAccess() {
@@ -72,7 +76,7 @@ final class Model: ObservableObject {
     /// Bring `name` up (everything else down) or take it down.
     func set(_ name: String, on: Bool) {
         guard profiles.contains(name) else { refresh(); return }   // e.g. an unconfigured tile
-        if on != (active == name) { toggle(name) } else { refresh() }
+        Task { try? await apply(name, on: on) }
     }
 
     private func listenForControls() {

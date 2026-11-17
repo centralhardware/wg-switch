@@ -34,6 +34,18 @@ enum WireGuard {
     static func up(_ name: String) throws { _ = try run([wgQuick, "up", name]) }
     static func down(_ name: String) throws { _ = try run([wgQuick, "down", name]) }
 
+    /// Idempotent: on → every other tunnel down, `name` up (if not already); off → `name` down.
+    /// Works from the real state in /var/run/wireguard, never from what a tile believed.
+    static func set(_ name: String, on: Bool) throws {
+        let current = active()
+        if on {
+            for p in current where p != name { try down(p) }
+            if !current.contains(name) { try up(name) }
+        } else if current.contains(name) {
+            try down(name)
+        }
+    }
+
     /// Only one tunnel at a time: tear everything down, then bring `name` up.
     /// Toggling the already-active profile just turns it off.
     static func toggle(_ name: String) throws {

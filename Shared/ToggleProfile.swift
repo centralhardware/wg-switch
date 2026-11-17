@@ -21,10 +21,7 @@ struct ToggleProfile: SetValueIntent {
         if let handler = await ToggleProfile.handler {
             try await handler(profile, value)
         } else {
-            // Fallback when run in the extension: optimistic state + ping the app.
-            var state = SharedState.load()
-            state.active = value ? profile : (state.active == profile ? nil : state.active)
-            state.save()
+            // Running in the extension: hand the request to the app. Only the app writes `state`.
             SwitchRequest.send(profile: profile, on: value)
         }
         return .result()
