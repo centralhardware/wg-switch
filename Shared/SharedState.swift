@@ -32,14 +32,31 @@ enum SwitchRequest {
     private static let key = "request"
 
     /// `profile` on → bring it up (and everything else down); off → bring it down.
+    /// The request travels in the notification *name* (Darwin notifications carry no payload),
+    /// e.g. me.centralhardware.wgswitch.request.on.wg0. The prefs copy is only a fallback for the
+    /// app's 10 s tick; reading it right after the ping returned a stale cached value.
+    static func name(profile: String, on: Bool) -> String {
+        "\(notification as String).\(on ? "on" : "off").\(profile)"
+    }
+
+    static func parse(_ name: String) -> (profile: String, on: Bool)? {
+        let prefix = (notification as String) + "."
+        guard name.hasPrefix(prefix) else { return nil }
+        let rest = name.dropFirst(prefix.count)
+        if rest.hasPrefix("on.") { return (String(rest.dropFirst(3)), true) }
+        if rest.hasPrefix("off.") { return (String(rest.dropFirst(4)), false) }
+        return nil
+    }
+
     static func send(profile: String, on: Bool) {
         wgLog.notice("send request \(profile, privacy: .public) on=\(on)")
         SharedState.defaults?.set(["profile": profile, "on": on], forKey: key)
         CFNotificationCenterPostNotification(CFNotificationCenterGetDarwinNotifyCenter(),
-                                             CFNotificationName(notification), nil, nil, true)
+                                             CFNotificationName(name(profile: profile, on: on) as CFString), nil, nil, true)
     }
 
     static func take() -> (profile: String, on: Bool)? {
+        SharedState.defaults?.synchronize()
         guard let d = SharedState.defaults?.dictionary(forKey: key),
               let p = d["profile"] as? String, let on = d["on"] as? Bool else { return nil }
         SharedState.defaults?.removeObject(forKey: key)

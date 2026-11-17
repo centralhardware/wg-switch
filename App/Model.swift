@@ -40,6 +40,7 @@ final class Model: ObservableObject {
             self.error = error.localizedDescription
         }
         active = WireGuard.active().first
+        listenForControls()
         publish()
     }
 
@@ -81,16 +82,29 @@ final class Model: ObservableObject {
         Task { try? await apply(name, on: on) }
     }
 
+    private var observedProfiles: [String] = []
+
     private func listenForControls() {
+        // Darwin observers need exact names, so (re)register one on/off pair per profile.
+        guard observedProfiles != profiles else { return }
+        let center = CFNotificationCenterGetDarwinNotifyCenter()
         let observer = Unmanaged.passUnretained(self).toOpaque()
-        CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), observer, { _, observer, _, _, _ in
-            guard let observer else { return }
-            let model = Unmanaged<Model>.fromOpaque(observer).takeUnretainedValue()
-            wgLog.notice("darwin notification received")
-            Task { @MainActor in
-                if let req = SwitchRequest.take() { model.set(req.profile, on: req.on) }
+        CFNotificationCenterRemoveEveryObserver(center, observer)
+        for p in profiles {
+            for on in [true, false] {
+                CFNotificationCenterAddObserver(center, observer, { _, observer, name, _, _ in
+                    guard let observer, let raw = name?.rawValue as String?,
+                          let req = SwitchRequest.parse(raw) else { return }
+                    let model = Unmanaged<Model>.fromOpaque(observer).takeUnretainedValue()
+                    wgLog.notice("control request \(req.profile, privacy: .public) on=\(req.on)")
+                    Task { @MainActor in
+                        _ = SwitchRequest.take()   // drop the fallback copy
+                        model.set(req.profile, on: req.on)
+                    }
+                }, SwitchRequest.name(profile: p, on: on) as CFString, nil, .deliverImmediately)
             }
-        }, SwitchRequest.notification, nil, .deliverImmediately)
+        }
+        observedProfiles = profiles
     }
 
     func handle(_ url: URL) {
