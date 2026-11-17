@@ -8,10 +8,10 @@ struct SharedState: Codable {
     var error: String? = nil
 
     private static let key = "state"
-    static var defaults: UserDefaults? {
-        guard let group = Bundle.main.object(forInfoDictionaryKey: "AppGroup") as? String else { return nil }
-        return UserDefaults(suiteName: group)
-    }
+    /// ~/Library/Preferences/me.centralhardware.wgswitch.shared.plist. The sandboxed extension reaches it
+    /// through a shared-preference entitlement exception (app groups would need a provisioning profile).
+    static let suite = "me.centralhardware.wgswitch.shared"
+    static var defaults: UserDefaults? { UserDefaults(suiteName: suite) }
 
     static func load() -> SharedState {
         guard let data = defaults?.data(forKey: key),
@@ -24,8 +24,8 @@ struct SharedState: Codable {
     }
 }
 
-/// Control → app requests. The extension writes the wanted end state to the app group and pings
-/// the app with a payload-less Darwin notification (one of the few IPC paths a sandboxed extension has).
+/// Control → app requests. The extension writes the wanted end state to the shared preferences domain and pings
+/// the app with a payload-less Darwin notification (the request itself sits in the shared preferences domain).
 enum SwitchRequest {
     static let notification = "me.centralhardware.wgswitch.request" as CFString
     private static let key = "request"

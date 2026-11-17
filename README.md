@@ -25,7 +25,8 @@ xcodegen generate && open WGSwitch.xcodeproj
 ```
 
 In Xcode, choose your team under *Signing & Capabilities* for both targets. The tiles and the
-app share state through an app group, and macOS only loads the extension from a signed build.
+app share state through the `me.centralhardware.wgswitch.shared` preferences domain, so an
+ad-hoc build works too.
 Then Run, move the app to /Applications, open Control Center → Edit Controls, add a
 **WireGuard Profile** tile and pick a profile. Add one tile per profile.
 
@@ -34,7 +35,8 @@ Then Run, move the app to /Applications, open Control Center → Edit Controls, 
 - The app runs `sudo -n wg-quick up|down <name>` and reads `/var/run/wireguard/*.name` to see
   which tunnel is up. It polls every 10 s, so it also notices changes made in the terminal.
 - The sandboxed Control Center extension can't read `/etc/wireguard` or run sudo. The app
-  publishes the profile list and the active tunnel to the app group. A tile tap writes the
+  publishes the profile list and the active tunnel to a shared preferences domain (the extension has a sandbox exception for it;
+  app groups would need a provisioning profile). A tile tap writes the
   request there and posts a Darwin notification; the app performs the switch and reloads all
   tiles, so only one ever shows On. The app must be running (add it to Login Items).
 

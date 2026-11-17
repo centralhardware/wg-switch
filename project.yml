@@ -8,7 +8,7 @@ settings:
     SWIFT_VERSION: "5.9"
     MARKETING_VERSION: "1.0"
     CURRENT_PROJECT_VERSION: "1"
-    DEVELOPMENT_TEAM: ""   # set your team in Xcode (needed for the app group / widget)
+    DEVELOPMENT_TEAM: ""   # optional; CI builds ad-hoc
 targets:
   WGSwitch:
     type: application
@@ -20,14 +20,12 @@ targets:
       path: App/Info.plist
       properties:
         LSUIElement: true
-        AppGroup: $(TeamIdentifierPrefix)me.centralhardware.wgswitch
         CFBundleURLTypes:
           - CFBundleURLName: me.centralhardware.wgswitch
             CFBundleURLSchemes: [wgswitch]
     entitlements:
       path: App/WGSwitch.entitlements
-      properties:
-        com.apple.security.application-groups: [$(TeamIdentifierPrefix)me.centralhardware.wgswitch]
+      properties: {}
   WGSwitchControls:
     type: app-extension
     platform: macOS
@@ -35,11 +33,12 @@ targets:
     info:
       path: Controls/Info.plist
       properties:
-        AppGroup: $(TeamIdentifierPrefix)me.centralhardware.wgswitch
         NSExtension:
           NSExtensionPointIdentifier: com.apple.widgetkit-extension
     entitlements:
       path: Controls/WGSwitchControls.entitlements
       properties:
         com.apple.security.app-sandbox: true
-        com.apple.security.application-groups: [$(TeamIdentifierPrefix)me.centralhardware.wgswitch]
+        # App groups need a provisioning profile, which an ad-hoc build doesn't have.
+        # A shared preferences domain works with any signature.
+        com.apple.security.temporary-exception.shared-preference.read-write: [me.centralhardware.wgswitch.shared]
