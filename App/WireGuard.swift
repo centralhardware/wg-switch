@@ -34,6 +34,33 @@ enum WireGuard {
         if !current.contains(name) { try up(name) }
     }
 
+    /// True when the failure means the sudoers rule is missing.
+    static func needsAccess(_ message: String?) -> Bool {
+        message?.contains("password is required") ?? false
+    }
+
+    /// Installs /etc/sudoers.d/wgswitch through the standard macOS admin prompt
+    /// (same rule as scripts/install-sudoers.sh).
+    static func installSudoers() throws {
+        let bin = (wgQuick as NSString).deletingLastPathComponent
+        let rules = """
+        Cmnd_Alias WGSWITCH = \(bin)/wg-quick up *, \(bin)/wg-quick down *, /bin/ls /etc/wireguard
+        Defaults!WGSWITCH secure_path="\(bin):/usr/bin:/bin:/usr/sbin:/sbin"
+        \(NSUserName()) ALL=(root) NOPASSWD: WGSWITCH
+
+        """
+        let tmp = FileManager.default.temporaryDirectory.appendingPathComponent("wgswitch.sudoers")
+        try rules.write(to: tmp, atomically: true, encoding: .utf8)
+        let shell = "/usr/sbin/visudo -cf '\(tmp.path)' && /usr/bin/install -m 0440 -o root -g wheel '\(tmp.path)' /etc/sudoers.d/wgswitch"
+        let source = "do shell script \"\(shell)\" with administrator privileges"
+        var err: NSDictionary?
+        NSAppleScript(source: source)?.executeAndReturnError(&err)
+        try? FileManager.default.removeItem(at: tmp)
+        if let err {
+            throw Failure(message: err[NSAppleScript.errorMessage] as? String ?? "Could not install the sudo rule")
+        }
+    }
+
     static var wgQuick: String {
         ["/opt/homebrew/bin/wg-quick", "/usr/local/bin/wg-quick"]
             .first { FileManager.default.isExecutableFile(atPath: $0) } ?? "/opt/homebrew/bin/wg-quick"

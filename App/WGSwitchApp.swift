@@ -47,6 +47,12 @@ struct MenuContent: View {
             }
             if let error = model.error {
                 Text(error).font(.caption).foregroundStyle(.red).fixedSize(horizontal: false, vertical: true)
+                if WireGuard.needsAccess(error) {
+                    Text("WGSwitch needs passwordless sudo for wg-quick up/down only.")
+                        .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                    Button("Grant access…") { model.grantAccess() }
+                        .buttonStyle(.borderedProminent)
+                }
             }
             Divider()
             HStack {

@@ -44,6 +44,11 @@ final class Model: ObservableObject {
         }
     }
 
+    func grantAccess() {
+        do { try WireGuard.installSudoers() } catch { self.error = error.localizedDescription; return }
+        refresh()
+    }
+
     /// Bring `name` up (everything else down) or take it down.
     func set(_ name: String, on: Bool) {
         if on != (active == name) { toggle(name) } else { refresh() }
