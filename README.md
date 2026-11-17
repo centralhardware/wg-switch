@@ -4,7 +4,19 @@ A macOS 26 menu-bar app plus Control Center tiles that switch between the
 `wg-quick` profiles in `/etc/wireguard/*.conf`. Only one tunnel is up at a time: picking a
 profile brings every active tunnel down first. Picking the active profile turns it off.
 
-## Install
+## Switch by macOS user (no app)
+
+`user-switch/` is a root LaunchDaemon that keeps the tunnel matching the user in front
+(fast user switching): e.g. `working` → wg1, `alex` → wg0. Every 5 s it checks the console
+user and runs `wg-quick` only when the wrong tunnel is up.
+
+```sh
+git clone https://github.com/centralhardware/wg-switch && cd wg-switch/user-switch
+./install.sh working=wg1 alex=wg0     # ./install.sh --uninstall to remove
+tail -f /var/log/wg-user-switch.log
+```
+
+## Install the app
 
 Download `WGSwitch.dmg` from the latest [release](https://github.com/centralhardware/wg-switch/releases/latest)
 and drag the app to Applications. Then:
