@@ -7,7 +7,7 @@ BREW="$(brew --prefix 2>/dev/null || echo /opt/homebrew)"
 FILE=/etc/sudoers.d/wgswitch
 TMP="$(mktemp)"
 cat > "$TMP" <<RULES
-Cmnd_Alias WGSWITCH = $BREW/bin/wg-quick up *, $BREW/bin/wg-quick down *, /bin/ls /etc/wireguard
+Cmnd_Alias WGSWITCH = $BREW/bin/wg-quick up *, $BREW/bin/wg-quick down *, /bin/ls /etc/wireguard, /bin/ls /var/run/wireguard
 # wg-quick needs Homebrew's bash 4+ and wireguard-go on PATH
 Defaults!WGSWITCH secure_path="$BREW/bin:/usr/bin:/bin:/usr/sbin:/sbin"
 $USER_NAME ALL=(root) NOPASSWD: WGSWITCH

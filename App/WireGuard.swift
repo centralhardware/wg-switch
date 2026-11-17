@@ -18,8 +18,16 @@ enum WireGuard {
             .sorted()
     }
 
+    /// Tunnels that are up right now, e.g. ["wg1"] when /var/run/wireguard has wg1.name.
     static func active() -> [String] {
-        let files = (try? FileManager.default.contentsOfDirectory(atPath: runDir)) ?? []
+        let files: [String]
+        if let list = try? FileManager.default.contentsOfDirectory(atPath: runDir) {
+            files = list
+        } else if let out = try? run(["/bin/ls", runDir]) {      // directory not readable as the user
+            files = out.split(separator: "\n").map(String.init)
+        } else {
+            files = []
+        }
         return files.filter { $0.hasSuffix(".name") }.map { String($0.dropLast(5)) }.sorted()
     }
 
@@ -44,7 +52,7 @@ enum WireGuard {
     static func installSudoers() throws {
         let bin = (wgQuick as NSString).deletingLastPathComponent
         let rules = """
-        Cmnd_Alias WGSWITCH = \(bin)/wg-quick up *, \(bin)/wg-quick down *, /bin/ls /etc/wireguard
+        Cmnd_Alias WGSWITCH = \(bin)/wg-quick up *, \(bin)/wg-quick down *, /bin/ls /etc/wireguard, /bin/ls /var/run/wireguard
         Defaults!WGSWITCH secure_path="\(bin):/usr/bin:/bin:/usr/sbin:/sbin"
         \(NSUserName()) ALL=(root) NOPASSWD: WGSWITCH
 
