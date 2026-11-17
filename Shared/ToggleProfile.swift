@@ -18,8 +18,9 @@ struct ToggleProfile: SetValueIntent {
     @MainActor static var handler: ((String, Bool) async throws -> Void)?
 
     func perform() async throws -> some IntentResult {
-        wgLog.notice("ToggleProfile.perform profile=\(profile, privacy: .public) on=\(value) inApp=\(await ToggleProfile.handler != nil)")
-        if let handler = await ToggleProfile.handler {
+        let handler = await ToggleProfile.handler
+        wgLog.notice("ToggleProfile.perform profile=\(profile, privacy: .public) on=\(value) inApp=\(handler != nil)")
+        if let handler {
             try await handler(profile, value)
         } else {
             // Running in the extension: hand the request to the app. Only the app writes `state`.
