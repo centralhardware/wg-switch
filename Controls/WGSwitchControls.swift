@@ -41,6 +41,8 @@ struct ProfileValue: AppIntentControlValueProvider {
     }
     func currentValue(configuration: SelectProfile) async throws -> TileValue {
         let name = configuration.profile?.id ?? "WireGuard"
+        let state = SharedState.load()
+        wgLog.notice("currentValue profile=\(name, privacy: .public) active=\(state.active ?? "nil", privacy: .public) profiles=\(state.profiles.joined(separator: ","), privacy: .public)")
         return TileValue(name: name, isOn: SharedState.load().active == name)
     }
 }

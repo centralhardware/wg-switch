@@ -33,6 +33,7 @@ enum SwitchRequest {
 
     /// `profile` on → bring it up (and everything else down); off → bring it down.
     static func send(profile: String, on: Bool) {
+        wgLog.notice("send request \(profile, privacy: .public) on=\(on)")
         SharedState.defaults?.set(["profile": profile, "on": on], forKey: key)
         CFNotificationCenterPostNotification(CFNotificationCenterGetDarwinNotifyCenter(),
                                              CFNotificationName(notification), nil, nil, true)
@@ -45,3 +46,7 @@ enum SwitchRequest {
         return (p, on)
     }
 }
+
+import os
+/// `log stream --predicate 'subsystem == "me.centralhardware.wgswitch"' --level debug`
+let wgLog = Logger(subsystem: "me.centralhardware.wgswitch", category: Bundle.main.bundleURL.pathExtension == "appex" ? "control" : "app")

@@ -25,6 +25,7 @@ final class Model: ObservableObject {
     /// Periodic check; also picks up a tile request whose Darwin notification was missed.
     private func tick() {
         if let req = SwitchRequest.take() {
+            wgLog.notice("tick picked up request \(req.profile, privacy: .public) on=\(req.on)")
             set(req.profile, on: req.on)
         } else {
             refresh()
@@ -58,6 +59,7 @@ final class Model: ObservableObject {
 
     /// Used by the Control Center intent when it runs in the app: waits for wg-quick, throws on failure.
     func apply(_ name: String, on: Bool) async throws {
+        wgLog.notice("apply \(name, privacy: .public) on=\(on)")
         busy = true
         defer { busy = false; refresh() }
         do {
@@ -84,6 +86,7 @@ final class Model: ObservableObject {
         CFNotificationCenterAddObserver(CFNotificationCenterGetDarwinNotifyCenter(), observer, { _, observer, _, _, _ in
             guard let observer else { return }
             let model = Unmanaged<Model>.fromOpaque(observer).takeUnretainedValue()
+            wgLog.notice("darwin notification received")
             Task { @MainActor in
                 if let req = SwitchRequest.take() { model.set(req.profile, on: req.on) }
             }

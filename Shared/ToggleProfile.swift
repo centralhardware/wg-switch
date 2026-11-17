@@ -18,6 +18,7 @@ struct ToggleProfile: SetValueIntent {
     @MainActor static var handler: ((String, Bool) async throws -> Void)?
 
     func perform() async throws -> some IntentResult {
+        wgLog.notice("ToggleProfile.perform profile=\(profile, privacy: .public) on=\(value) inApp=\(await ToggleProfile.handler != nil)")
         if let handler = await ToggleProfile.handler {
             try await handler(profile, value)
         } else {
