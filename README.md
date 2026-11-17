@@ -4,7 +4,19 @@ A macOS 26 menu-bar app plus Control Center tiles that switch between the
 `wg-quick` profiles in `/etc/wireguard/*.conf`. Only one tunnel is up at a time: picking a
 profile brings every active tunnel down first. Picking the active profile turns it off.
 
-## Setup
+## Install
+
+Download `WGSwitch.dmg` from the latest [release](https://github.com/centralhardware/wg-switch/releases/latest)
+and drag the app to Applications. Then:
+
+```sh
+brew install wireguard-tools
+curl -fsSL https://raw.githubusercontent.com/centralhardware/wg-switch/main/scripts/install-sudoers.sh | bash
+```
+
+The build is ad-hoc signed, so the first launch needs right-click → Open.
+
+## Build from source
 
 ```sh
 brew install wireguard-tools xcodegen
@@ -26,5 +38,4 @@ Then Run, move the app to /Applications, open Control Center → Edit Controls, 
   request there and posts a Darwin notification; the app performs the switch and reloads all
   tiles, so only one ever shows On. The app must be running (add it to Login Items).
 
-CI (`.github/workflows/build.yml`) produces an unsigned build. That's fine for checking that
-the code compiles, but the tiles only show up in a build signed with your team.
+Releases: push a `v*` tag and `.github/workflows/release.yml` builds the DMG and attaches it.
